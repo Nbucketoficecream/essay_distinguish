@@ -7,25 +7,32 @@ def gradio_process(names: str):
     titles = [n.strip() for n in re.split(r"[,，\n]+", names) if n.strip()]
 
     for title in titles:
-        res = ec.classify(title) or []          # 可能回 None
-        status = res[0] if len(res) >= 1 else "錯誤"
-        url    = res[1] if len(res) >= 2 else ""
+        res = ec.classify(title) or ["", "", ""]
+        # 期望 res = [web_status, paper_status, url]
+        web_status  = res[0] if len(res) > 0 else ""
+        paper_status= res[1] if len(res) > 1 else ""
+        url         = res[2] if len(res) > 2 else ""
 
-        if status == "電子全文":
-            web.append(f"{title} → {url or '(無連結)'}")
-        elif status == "紙本全文":
-            paper.append(f"{title} → {url or '(無連結)'}")
-        elif status in ("查無此論文", "無全文"):
-            notfound.append(title)
-        elif status in ("驗證碼審查", "驗證碼審查機制"):
+        # 驗證碼
+        if web_status in ("驗證碼審查", "驗證碼審查機制"):
             notfound.append(f"{title}（驗證碼審查）")
-        else:
-            notfound.append(f"{title}（{status}）")  # 其他狀態
+            continue
+
+        if web_status == "電子全文":
+            web.append(f"{title} → {url or '(無連結)'}")
+        if paper_status == "紙本全文":
+            paper.append(f"{title} → {url or '(無連結)'}")
+
+        # 兩者都沒有就歸到未找到/無全文
+        if not web_status and not paper_status:
+            notfound.append(title)
+
     return (
         "\n".join(web) if web else "沒有電子全文資料",
         "\n".join(paper) if paper else "沒有紙本全文資料",
         "\n".join(notfound) if notfound else "全部都有找到！"
     )
+
 
 
 demo = gr.Interface(
