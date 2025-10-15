@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b79c2b96-5df0-4396-b30b-cbae2209222d</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>essay_classify.py</StartupFile>
+    <StartupFile>app.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
