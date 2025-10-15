@@ -1,17 +1,26 @@
 ﻿#coding:utf-8
+import re
 import gradio as gr
 import essay_classify as ec
 def gradio_process(names: str):
     web, paper, notfound = [], [], []
-    for title in [n.strip() for n in names.split(",") if n.strip()]:
-        status, url = ec.classify(title)
-        if status == "電子全文":
-            web.append(f"{title} → {url}")
-        elif status == "紙本全文":
-            paper.append(f"{title} → {url}")
-        else:
-            notfound.append(title)
+    titles = [n.strip() for n in re.split(r"[,，\n]+", names) if n.strip()]
 
+    for title in titles:
+        res = ec.classify(title) or []          # 可能回 None
+        status = res[0] if len(res) >= 1 else "錯誤"
+        url    = res[1] if len(res) >= 2 else ""
+
+        if status == "電子全文":
+            web.append(f"{title} → {url or '(無連結)'}")
+        elif status == "紙本全文":
+            paper.append(f"{title} → {url or '(無連結)'}")
+        elif status in ("查無此論文", "無全文"):
+            notfound.append(title)
+        elif status in ("驗證碼審查", "驗證碼審查機制"):
+            notfound.append(f"{title}（驗證碼審查）")
+        else:
+            notfound.append(f"{title}（{status}）")  # 其他狀態
     return (
         "\n".join(web) if web else "沒有電子全文資料",
         "\n".join(paper) if paper else "沒有紙本全文資料",
